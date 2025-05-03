@@ -73,7 +73,7 @@ export class ProductsService {
   async findOne(id: string): Promise<Product> {
     const product = await this.productRepository.findOne({
       where: { id },
-      relations: ['category', 'category.createdBy'],
+      relations: ['category', 'createdBy'],
     });
 
     if (!product) {
@@ -81,6 +81,21 @@ export class ProductsService {
     }
 
     return product;
+  }
+
+  async findByCategory(categoryName: string): Promise<Product[]> {
+    const category = await this.categoryRepository.findOne({
+      where: { name: categoryName },
+    });
+
+    if (!category) {
+      throw new NotFoundException(`Category '${categoryName}' not found`);
+    }
+
+    return this.productRepository.find({
+      where: { category: { id: category.id } },
+      relations: ['category'],
+    });
   }
 
   async remove(id: string): Promise<boolean> {

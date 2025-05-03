@@ -125,4 +125,9 @@ export class ProductsController {
   async findOne(@Param('id') id: string): Promise<Product> {
     return this.productsService.findOne(id);
   }
+
+  @Get('/category/:name')
+  async findByCategory(@Param('name') name: string) {
+    return this.productsService.findByCategory(name);
+  }
 }
