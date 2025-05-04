@@ -5,9 +5,11 @@ import {
   ManyToOne,
   JoinColumn,
   ManyToMany,
+  OneToMany,
 } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
 import { User } from '../../users/entities/user.entity';
+import { OrderItem } from '../../orders/entities/order-item.entity';
 
 @Entity('products')
 export class Product {
@@ -41,4 +43,8 @@ export class Product {
 
   @Column()
   createdById: number;
+
+  // Relasi OneToMany dengan OrderItem
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.product)
+  orderItems: OrderItem[];
 }

@@ -1,5 +1,6 @@
 import { Product } from '../../products/entities/product.entity';
 import { CartItem } from '../../cart_items/entities/cart-item.entity';
+import { Order } from 'src/orders/entities/order.entity';
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 
 export enum UserRole {
@@ -44,4 +45,8 @@ export class User {
 
   @OneToMany(() => CartItem, (cartItem) => cartItem.user)
   cartItems: CartItem[];
+
+  // Relasi OneToMany dengan Order
+  @OneToMany(() => Order, (order) => order.user)
+  orders: Order[];
 }
