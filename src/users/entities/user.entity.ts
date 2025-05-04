@@ -1,6 +1,7 @@
 import { Product } from '../../products/entities/product.entity';
 import { CartItem } from '../../cart_items/entities/cart-item.entity';
 import { Order } from 'src/orders/entities/order.entity';
+import { Notification } from 'src/notifications/entities/notification.entity'; // Import Notification entity
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 
 export enum UserRole {
@@ -49,4 +50,7 @@ export class User {
   // Relasi OneToMany dengan Order
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
+
+  @OneToMany(() => Notification, (notification) => notification.user)
+  notifications: Notification[]; // Relasi untuk mendapatkan daftar notifikasi terkait user
 }
