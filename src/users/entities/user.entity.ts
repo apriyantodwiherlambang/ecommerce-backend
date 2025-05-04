@@ -1,4 +1,5 @@
 import { Product } from '../../products/entities/product.entity';
+import { CartItem } from '../../cart_items/entities/cart-item.entity';
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 
 export enum UserRole {
@@ -40,4 +41,7 @@ export class User {
 
   @OneToMany(() => Product, (product) => product.createdBy)
   products: Product[]; // Relasi untuk produk yang dibuat oleh user (admin)
+
+  @OneToMany(() => CartItem, (cartItem) => cartItem.user)
+  cartItems: CartItem[];
 }
