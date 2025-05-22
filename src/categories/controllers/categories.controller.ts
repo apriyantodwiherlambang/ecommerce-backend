@@ -1,4 +1,3 @@
-// categories.controller.ts
 import {
   Controller,
   Get,
@@ -8,7 +7,6 @@ import {
   UseGuards,
   Req,
   Delete,
-  Query,
 } from '@nestjs/common';
 import { CategoriesService } from '../services/categories.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -21,6 +19,7 @@ import { UserRole } from '../../users/entities/user.entity';
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
+  // Admin-only create category
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Post()
@@ -39,20 +38,13 @@ export class CategoriesController {
     };
   }
 
+  // Get all categories (public)
   @Get()
-  async findAll(@Query('id') id: string): Promise<Category[]> {
-    if (id) {
-      const category = await this.categoriesService.findOne(id);
-      if (!category) {
-        throw new Error('Category not found');
-      }
-      return [category];
-    } else {
-      return this.categoriesService.findAll();
-    }
+  async findAll(): Promise<Category[]> {
+    return this.categoriesService.findAll();
   }
 
-  // Endpoint untuk mendapatkan kategori berdasarkan ID
+  // Get category by id (public)
   @Get(':id')
   async findOne(
     @Param('id') id: string,
@@ -63,15 +55,16 @@ export class CategoriesController {
     }
     return {
       category,
-      createdBy: category.createdBy, // Sertakan admin yang membuat kategori
+      createdBy: category.createdBy,
     };
   }
 
+  // Admin-only delete category
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  @Delete()
+  @Delete(':id')
   async delete(
-    @Query('id') id: string,
+    @Param('id') id: string,
     @Req() req,
   ): Promise<{ message: string; deletedBy: string; categoryId: string }> {
     const adminUsername = req.user.username;

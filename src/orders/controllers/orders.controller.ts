@@ -1,6 +1,6 @@
 // src/orders/controllers/order.controller.ts
 
-import { Controller, Post, Body, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Req, UseGuards, Get } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { OrderService } from '../services/orders.service';
 import { CreateOrderDto } from '../dtos/create-order.dto';
@@ -35,5 +35,11 @@ export class OrderController {
     );
 
     return response; // Return the full response, including the order and message
+  }
+
+  @Get('my-orders')
+  async getMyOrders(@Req() req: Request) {
+    const userId = req.user.id;
+    return this.orderService.getOrdersByUser(userId);
   }
 }

@@ -13,6 +13,7 @@ import {
   Req,
   Get,
   Res,
+  Logger,
 } from '@nestjs/common';
 import { UsersService } from '../services/users.service';
 import { CreateUserDto } from '../dtos/create-user.dto';
@@ -65,6 +66,8 @@ export class UsersController {
     };
   }
 
+  @Post('login')
+  @Public()
   @ApiBody({
     description: 'User login credentials',
     type: LoginUserDto,
@@ -78,10 +81,10 @@ export class UsersController {
       },
     },
   })
-  @Post('login')
-  @Public()
   async login(@Body() loginUserDto: LoginUserDto) {
-    const { accessToken, role } = await this.usersService.login(loginUserDto);
+    const { accessToken, refreshToken, role, user } =
+      await this.usersService.login(loginUserDto);
+
     const message =
       role === 'admin'
         ? 'Admin logged in successfully'
@@ -91,6 +94,8 @@ export class UsersController {
       statusCode: HttpStatus.OK,
       message,
       accessToken,
+      refreshToken,
+      user, // Kirim user ke Flutter
     };
   }
 
@@ -157,24 +162,43 @@ export class UsersController {
   })
   @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard)
-  @Post('update-profile-image')
+  @Patch('update-profile-image')
   @UseInterceptors(FileInterceptor('image', imageUploadOptions))
   async updateProfileImage(
     @UploadedFile() file: Express.Multer.File,
-    @Req() request: CustomRequest, // Gunakan CustomRequest di sini
+    @Req() request: CustomRequest,
   ) {
-    if (!file) {
-      throw new BadRequestException('No file uploaded');
-    }
+    const logger = new Logger('UsersController');
+    try {
+      if (!file) {
+        logger.error('No file uploaded');
+        throw new BadRequestException('No file uploaded');
+      }
 
-    if (!file.mimetype.startsWith('image/')) {
-      throw new BadRequestException(
-        'Invalid file type. Only image files are allowed.',
-      );
-    }
+      if (!file.mimetype.startsWith('image/')) {
+        logger.error(`Invalid file type: ${file.mimetype}`);
+        throw new BadRequestException(
+          'Invalid file type. Only image files are allowed.',
+        );
+      }
 
-    const userId = request.user.id; // Ambil userId dari JWT payload
-    return this.usersService.updateProfileImage(userId, file.path);
+      const userId = request.user.id;
+      logger.log(`User ID: ${userId}`);
+      logger.log(`Uploaded file info: ${JSON.stringify(file)}`);
+
+      return await this.usersService.updateProfileImage(userId, file.path);
+    } catch (error) {
+      logger.error('Error upload profile image', error.stack);
+      throw error;
+    }
+  }
+  @ApiBearerAuth('access-token')
+  @UseGuards(JwtAuthGuard)
+  @Get('get-profile')
+  @UseGuards(JwtAuthGuard)
+  async getProfile(@Request() req) {
+    console.log('req.user:', req.user);
+    return this.usersService.getProfile(req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)

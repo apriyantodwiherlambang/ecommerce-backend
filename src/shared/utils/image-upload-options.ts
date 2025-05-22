@@ -10,6 +10,8 @@ export const imageFileFilter = (
   file: Express.Multer.File,
   callback: (error: Error | null, acceptFile: boolean) => void,
 ) => {
+  console.log('File mimetype:', file.mimetype);
+
   if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
     return callback(
       new BadRequestException('Only image files are allowed!'),

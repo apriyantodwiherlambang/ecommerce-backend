@@ -55,9 +55,12 @@ export class UsersService {
     }
   }
 
-  async login(
-    loginUserDto: LoginUserDto,
-  ): Promise<{ accessToken: string; refreshToken: string; role: string }> {
+  async login(loginUserDto: LoginUserDto): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    role: string;
+    user: Partial<User>; // atau bisa juga hanya `User` kalau kamu ingin return full
+  }> {
     const user = await this.usersRepository.findOne({
       where: { email: loginUserDto.email },
     });
@@ -85,7 +88,20 @@ export class UsersService {
     user.refreshToken = refreshToken;
     await this.usersRepository.save(user);
 
-    return { accessToken, refreshToken, role: user.role };
+    return {
+      accessToken,
+      refreshToken,
+      role: user.role,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        address: user.address,
+        phoneNumber: user.phoneNumber,
+        profileImage: user.profileImage,
+        role: user.role,
+      }, // hindari kirim password!
+    };
   }
 
   async refreshToken(userId: number, refreshToken: string): Promise<string> {
@@ -109,6 +125,7 @@ export class UsersService {
     file: Express.Multer.File,
     userId: number,
   ): Promise<User> {
+    console.log('Data diterima:', updateUserDto);
     const user = await this.usersRepository.findOne({ where: { id: userId } });
 
     if (!user) {
@@ -119,9 +136,20 @@ export class UsersService {
       user.profileImage = file.path;
       user.profileImageMimeType = file.mimetype;
     }
+    if (updateUserDto.username !== undefined) {
+      user.username = updateUserDto.username;
+    }
+    if (updateUserDto.email !== undefined) {
+      user.email = updateUserDto.email;
+    }
 
-    user.phoneNumber = updateUserDto.phoneNumber || user.phoneNumber;
-    user.address = updateUserDto.address || user.address;
+    if (updateUserDto.phoneNumber !== undefined) {
+      user.phoneNumber = updateUserDto.phoneNumber;
+    }
+
+    if (updateUserDto.address !== undefined) {
+      user.address = updateUserDto.address;
+    }
 
     try {
       return await this.usersRepository.save(user);
@@ -164,5 +192,26 @@ export class UsersService {
 
   async findAll(): Promise<User[]> {
     return this.usersRepository.find();
+  }
+
+  async getProfile(userId: number) {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: [], // tambahkan relasi jika dibutuhkan, misalnya: ['orders', 'wishlist']
+    });
+
+    if (!user) {
+      throw new NotFoundException('User tidak ditemukan');
+    }
+
+    return {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      address: user.address,
+      phoneNumber: user.phoneNumber,
+      profileImage: user.profileImage, // sesuaikan dengan nama properti kamu
+      role: user.role,
+    };
   }
 }

@@ -46,7 +46,7 @@ export class ProductsController {
         },
       }),
       limits: {
-        fileSize: 5 * 1024 * 1024,
+        fileSize: 5 * 1024 * 1024, // max 5MB
       },
     }),
   )
@@ -55,18 +55,31 @@ export class ProductsController {
     @UploadedFile() file: Express.Multer.File,
     @Req() req,
   ): Promise<{ message: string; data: Product }> {
-    const user = req.user;
+    console.log('User:', req.user);
+    console.log('Received DTO:', createProductDto);
+    console.log('Received File:', file);
 
-    if (file) {
+    if (!file) {
+      console.warn('Warning: No file uploaded');
+    } else {
       createProductDto.image = `${BASE_URL}/uploads/products/${file.filename}`;
+      console.log('Set image URL:', createProductDto.image);
     }
 
-    const product = await this.productsService.create(createProductDto, user);
-
-    return {
-      message: `Product successfully created by ${user.username}`,
-      data: product,
-    };
+    try {
+      const product = await this.productsService.create(
+        createProductDto,
+        req.user,
+      );
+      console.log('Created product:', product);
+      return {
+        message: `Product successfully created by ${req.user.username}`,
+        data: product,
+      };
+    } catch (error) {
+      console.error('Error creating product:', error);
+      throw error;
+    }
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -92,17 +105,28 @@ export class ProductsController {
     @UploadedFile() file: Express.Multer.File,
     @Req() req,
   ): Promise<{ message: string; data: Product }> {
+    console.log(`Updating product id: ${id}`);
+    console.log('Received update DTO:', updateProductDto);
+    console.log('Received File:', file);
+
     if (file) {
       updateProductDto.image = `${BASE_URL}/uploads/products/${file.filename}`;
+      console.log('Set new image URL:', updateProductDto.image);
     }
 
-    const product = await this.productsService.update(id, updateProductDto);
-
-    return {
-      message: `Product successfully updated by ${req.user.username}`,
-      data: product,
-    };
+    try {
+      const product = await this.productsService.update(id, updateProductDto);
+      console.log('Updated product:', product);
+      return {
+        message: `Product successfully updated by ${req.user.username}`,
+        data: product,
+      };
+    } catch (error) {
+      console.error(`Error updating product id ${id}:`, error);
+      throw error;
+    }
   }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Delete()
@@ -110,24 +134,34 @@ export class ProductsController {
     @Query('id') id: string,
     @Req() req,
   ): Promise<{ message: string }> {
-    await this.productsService.remove(id);
-    return {
-      message: `Product successfully deleted by ${req.user.username}`,
-    };
+    console.log(`Deleting product id: ${id}`);
+    try {
+      await this.productsService.remove(id);
+      console.log(`Product id ${id} deleted successfully`);
+      return {
+        message: `Product successfully deleted by ${req.user.username}`,
+      };
+    } catch (error) {
+      console.error(`Error deleting product id ${id}:`, error);
+      throw error;
+    }
   }
 
   @Get()
   async findAll(): Promise<Product[]> {
+    console.log('Fetching all products');
     return this.productsService.findAll();
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Product> {
+    console.log(`Fetching product id: ${id}`);
     return this.productsService.findOne(id);
   }
 
   @Get('/category/:name')
   async findByCategory(@Param('name') name: string) {
+    console.log(`Fetching products by category: ${name}`);
     return this.productsService.findByCategory(name);
   }
 }

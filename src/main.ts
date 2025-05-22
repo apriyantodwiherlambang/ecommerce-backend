@@ -11,7 +11,10 @@ async function bootstrap() {
 
   // Menambahkan konfigurasi CORS
   app.enableCors({
-    origin: '*', // Atau kamu bisa ganti dengan domain yang diizinkan, misalnya 'http://localhost:4200'
+    origin: [
+      '*', // atau ganti dengan domain yang diizinkan
+      'https://6a1c-66-96-225-191.ngrok-free.app',
+    ], // Atau kamu bisa ganti dengan domain yang diizinkan, misalnya 'http://localhost:4200'
     allowedHeaders: 'Content-Type, Authorization', // Pastikan Authorization ada di sini
     methods: 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
   });

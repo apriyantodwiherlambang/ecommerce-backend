@@ -83,4 +83,12 @@ export class OrderService {
       order,
     };
   }
+
+  async getOrdersByUser(userId: number): Promise<Order[]> {
+    return this.orderRepository.find({
+      where: { user: { id: userId } },
+      relations: ['items', 'items.product'],
+      order: { createdAt: 'DESC' },
+    });
+  }
 }
